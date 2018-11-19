@@ -237,7 +237,6 @@ static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
 static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
 
 boolean RTC_DS1307::begin(void) {
-  Wire.begin();
   return true;
 }
 
@@ -353,7 +352,6 @@ DateTime RTC_Millis::now() {
 // RTC_PCF8563 implementation
 
 boolean RTC_PCF8523::begin(void) {
-  Wire.begin();
   return true;
 }
 
@@ -432,8 +430,16 @@ void RTC_PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
 // RTC_DS3231 implementation
 
 boolean RTC_DS3231::begin(void) {
-  Wire.begin();
-  return true;
+  Wire.beginTransmission(DS3231_ADDRESS);
+  Wire._I2C_WRITE(DS3231_CONTROL); 
+  Wire.endTransmission();
+
+  Wire.requestFrom(DS3231_ADDRESS, 1);
+  uint8_t ss = Wire._I2C_READ();
+  if(ss==28){
+    return true;
+  }
+  return false;
 }
 
 bool RTC_DS3231::lostPower(void) {
