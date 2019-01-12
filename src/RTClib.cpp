@@ -430,23 +430,18 @@ void RTC_PCF8523::writeSqwPinMode(Pcf8523SqwPinMode mode) {
 // RTC_DS3231 implementation
 
 boolean RTC_DS3231::begin(void) {
-  Wire.beginTransmission(DS3231_ADDRESS);
-  Wire._I2C_WRITE(DS3231_CONTROL); 
-  Wire.endTransmission();
-
-  Wire.requestFrom(DS3231_ADDRESS, 1);
-  uint8_t ss = Wire._I2C_READ();
-  if(ss==28){
+  uint8_t ss = read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL);
+  if(ss == 28){
     return true;
   }
   return false;
 }
 
 bool RTC_DS3231::lostPower(void) {
-  return (read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG) >> 7);
+  return read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG) >> 7;
 }
 
-void RTC_DS3231::adjust(const DateTime& dt) {
+void RTC_DS3231::adjust(const DateTime& dt, bool timeValid) {
   Wire.beginTransmission(DS3231_ADDRESS);
   Wire._I2C_WRITE((byte)0); // start at location 0
   Wire._I2C_WRITE(bin2bcd(dt.second()));
@@ -458,9 +453,11 @@ void RTC_DS3231::adjust(const DateTime& dt) {
   Wire._I2C_WRITE(bin2bcd(dt.year() - 2000));
   Wire.endTransmission();
 
-  uint8_t statreg = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
-  statreg &= ~0x80; // flip OSF bit
-  write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, statreg);
+  if(timeValid){
+    uint8_t statreg = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+    statreg &= ~0x80; // set OSF bit to 0
+    write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, statreg);
+  }
 }
 
 DateTime RTC_DS3231::now() {

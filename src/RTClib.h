@@ -98,7 +98,11 @@ enum Ds3231SqwPinMode { DS3231_OFF = 0x01, DS3231_SquareWave1Hz = 0x00, DS3231_S
 class RTC_DS3231 {
 public:
     boolean begin(void);
-    static void adjust(const DateTime& dt);
+    /**
+     * Adjust the RTC time. if dt time is "valid", set OSF to false,
+     * otherwise do no change it!
+     */
+    static void adjust(const DateTime& dt, bool timeValid = true);
     bool lostPower(void);
     static DateTime now();
     static Ds3231SqwPinMode readSqwPinMode();
