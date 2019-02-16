@@ -438,7 +438,20 @@ boolean RTC_DS3231::begin(void) {
 }
 
 bool RTC_DS3231::lostPower(void) {
-  return read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG) >> 7;
+  statusRegCache = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+  statusRegValid = true;
+  return statusRegCache >> 7;
+}
+
+void RTC_DS3231::setEn32khz(bool value){
+    if(!statusRegValid){
+        statusRegCache = read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG);
+    }
+
+    if((bool)(statusRegCache & 0x08) != value){
+        statusRegCache ^= 1 << 3;
+        write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, statusRegCache);
+    }
 }
 
 void RTC_DS3231::adjust(const DateTime& dt, bool timeValid) {
@@ -458,6 +471,7 @@ void RTC_DS3231::adjust(const DateTime& dt, bool timeValid) {
     statreg &= ~0x80; // set OSF bit to 0
     write_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, statreg);
   }
+  statusRegValid = false;
 }
 
 DateTime RTC_DS3231::now() {
@@ -504,6 +518,6 @@ void RTC_DS3231::writeSqwPinMode(Ds3231SqwPinMode mode) {
     ctrl |= mode;
   } 
   write_i2c_register(DS3231_ADDRESS, DS3231_CONTROL, ctrl);
-
+  statusRegValid = false;
   //Serial.println( read_i2c_register(DS3231_ADDRESS, DS3231_CONTROL), HEX);
 }

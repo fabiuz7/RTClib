@@ -102,11 +102,22 @@ public:
      * Adjust the RTC time. if dt time is "valid", set OSF to false,
      * otherwise do no change it!
      */
-    static void adjust(const DateTime& dt, bool timeValid = true);
+    void adjust(const DateTime& dt, bool timeValid = true);
     bool lostPower(void);
-    static DateTime now();
-    static Ds3231SqwPinMode readSqwPinMode();
-    static void writeSqwPinMode(Ds3231SqwPinMode mode);
+    /**
+     * Enable/disable the square wave
+     */
+    void setEn32khz(bool value);
+    DateTime now();
+    Ds3231SqwPinMode readSqwPinMode();
+    void writeSqwPinMode(Ds3231SqwPinMode mode);
+private:
+    /**
+     * A copy of statusReg, for fast readings
+     * Any register writing should invalidate this cache
+     */
+    bool statusRegValid;
+    uint8_t statusRegCache;
 };
 
 
